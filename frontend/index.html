@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SimpleVideo Generator</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script crossorigin src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+  <style>
+    body { font-family: sans-serif; margin: 40px; background: #f2f2f2; }
+    input { margin-bottom: 10px; }
+    .preview { margin-top: 20px; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+function App() {
+  const [images, setImages] = React.useState([]);
+  const [title, setTitle] = React.useState('');
+  const [subtitle, setSubtitle] = React.useState('');
+  const [videoUrl, setVideoUrl] = React.useState('');
+  const handleFiles = (e) => {
+    setImages(Array.from(e.target.files));
+  };
+  const handleSubmit = async () => {
+    const data = new FormData();
+    images.forEach(img => data.append('images', img));
+    data.append('title', title);
+    data.append('subtitle', subtitle);
+    const res = await fetch('/generate', { method: 'POST', body: data });
+    if (res.ok) {
+      const blob = await res.blob();
+      setVideoUrl(URL.createObjectURL(blob));
+    } else {
+      alert('Erreur lors de la génération de la vidéo');
+    }
+  };
+  return (
+    <div>
+      <h1>Générateur de Vidéo Portrait</h1>
+      <input type="file" multiple accept="image/*" onChange={handleFiles} />
+      <br />
+      <input type="text" placeholder="Titre" maxLength="40" value={title} onChange={e => setTitle(e.target.value)} />
+      <br />
+      <input type="text" placeholder="Sous-titre" maxLength="60" value={subtitle} onChange={e => setSubtitle(e.target.value)} />
+      <br />
+      <button onClick={handleSubmit}>Générer</button>
+      {videoUrl && (
+        <div className="preview">
+          <video controls src={videoUrl} style={{ width: '200px' }}></video>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
